@@ -1,5 +1,5 @@
 /**
- * Created by РўР°РЅСЏ on 08.11.2018.
+ * Created by Таня on 08.11.2018.
  */
 
 import java.awt.*;
@@ -11,20 +11,17 @@ import javax.mail.internet.*;
 import javax.swing.*;
 import com.itextpdf.text.*;
 import java.awt.event.*;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.server.UID;
-import java.text.*;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Properties;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.*;
-import com.sun.mail.iap.ParsingException;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Date;
@@ -34,44 +31,41 @@ import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.util.UidGenerator;
 
 public class GUI extends JFrame {
-    private JLabel labelStart = new JLabel("РџСЂРµРїР°СЂР°С‚, РїСЂРёРЅРёРјР°РµРјС‹Р№ РїР°С†РёРµРЅС‚РѕРј:");
-    private JRadioButton metipred = new JRadioButton("РњРµС‚РёРїСЂРµРґ 4 РјРі");
-    private JRadioButton pred = new JRadioButton("РџСЂРµРґРЅРёР·РѕР»РѕРЅ 5 РјРі");
-    private JRadioButton other = new JRadioButton("Р”СЂСѓРіРѕР№ РїСЂРµРїР°СЂР°С‚ РёР»Рё РґРѕР·Р°");
+    private JLabel labelStart = new JLabel("Препарат, принимаемый пациентом:");
+    private JRadioButton metipred = new JRadioButton("Метипред 4 мг");
+    private JRadioButton pred = new JRadioButton("Преднизолон 5 мг");
+    private JRadioButton other = new JRadioButton("Другой препарат или доза");
     private JLabel labelNum = new JLabel("");
     private JTextField number = new JTextField(5);
-    private JLabel labelName = new JLabel("Р¤РРћ РїР°С†РёРµРЅС‚Р°:");
+    private JLabel labelName = new JLabel("ФИО пациента:");
     private JTextField name = new JTextField(20);
-    private JButton go= new JButton("Р Р°СЃСЃС‡РёС‚Р°С‚СЊ");
+    private JButton go= new JButton("Рассчитать");
     private JLabel deb = new JLabel("");
-    private JRadioButton today = new JRadioButton("Р”Р°");
-    //private JRadioButton yesterday = new JRadioButton("21:00 РЅР°РєР°РЅСѓРЅРµ");
-    private JLabel emailLabel = new JLabel("Email РїР°С†РёРµРЅС‚Р°");
+    private JCheckBox needEvent = new JCheckBox("Да");
+    private JLabel emailLabel = new JLabel("Email пациента");
     private JTextField email = new JTextField(20);
-    private JButton send = new JButton("РћС‚РїСЂР°РІРёС‚СЊ");
+    private JButton send = new JButton("Отправить");
     private JLabel result =  new JLabel("");
     private JPanel sendBox = new JPanel();
     private JPanel numberBox = new JPanel();
     private JPanel nameBox = new JPanel();
-    Document document = new Document();
-    String type;
 
-    ButtonGroup groupTime = new ButtonGroup();
+    String type;
+    String filename;
+
     LocalDate now = LocalDate.now();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    String filename;
+    DateTimeFormatter formatterTime = DateTimeFormatter.ofPattern("hh.mm.ss");
     Font font = new Font(BaseFont.createFont("Roboto-Regular.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED));
     Reminder reminder = new Reminder();
-    String weeks2 = "Р§РµСЂРµР· 2 РЅРµРґРµР»Рё РЅРµРѕР±С…РѕРґРёРјРѕ РїРѕСЃРµС‚РёС‚СЊ РІСЂР°С‡Р°.";
-    String weeks1 = "Р§РµСЂРµР· 1 РЅРµРґРµР»СЋ РЅРµРѕР±С…РѕРґРёРјРѕ РїРѕСЃРµС‚РёС‚СЊ РІСЂР°С‡Р°.";
-    String tomorrow = "Р—Р°РІС‚СЂР° РЅРµРѕР±С…РѕРґРёРјРѕ РїРѕСЃРµС‚РёС‚СЊ РІСЂР°С‡Р°.";
-    String todayVisit = "Р’ СЃР»СѓС‡Р°Рµ, РµСЃР»Рё РІС‹ РґРѕ СЃРёС… РїРѕСЂ РЅРµ РїРѕСЃРµС‚РёР»Рё РІСЂР°С‡Р°, СЃРґРµР»Р°Р№С‚Рµ СЌС‚Рѕ РєР°Рє РјРѕР¶РЅРѕ СЃРєРѕСЂРµРµ, Р° РїРѕРєР° РїСЂРёРЅРёРјР°Р№С‚Рµ РїСЂРµРїР°СЂР°С‚ РµР¶РµРґРЅРµРІРЅРѕ РІ РєРѕР»РёС‡РµСЃС‚РІРµ";
+    String weeks2 = "Через 2 недели необходимо посетить врача.";
+    String weeks1 = "Через 1 неделю необходимо посетить врача.";
+    String tomorrow = "Завтра необходимо посетить врача.";
+    String todayVisit = "В случае, если вы до сих пор не посетили врача, сделайте это как можно скорее, а пока принимайте препарат ежедневно в количестве";
 
     public GUI() throws IOException, DocumentException {
-        super("LALALA"); //TODO: name
         this.setBounds(150,150,550,450);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         Container container = this.getContentPane();
         container.setLayout(new GridLayout(7,1));
 
@@ -80,8 +74,7 @@ public class GUI extends JFrame {
         JPanel timePanel = new JPanel();
         JPanel typeTimePanel = new JPanel(new GridLayout(1, 1));
         JPanel emailPanel = new JPanel();
-        typeTimePanel.add(today);
-        //typeTimePanel.add(yesterday);
+        typeTimePanel.add(needEvent);
         timePanel.add(deb);
         timePanel.add(typeTimePanel);
         emailPanel.add(emailLabel);
@@ -125,16 +118,11 @@ public class GUI extends JFrame {
         group.add(metipred);
         group.add(pred);
         group.add(other);
-
-        groupTime.add(today);
-        //groupTime.add(yesterday);
-
         number.setVisible(false);
         name.setVisible(false);
         labelName.setVisible(false);
         go.setVisible(false);
-        today.setVisible(false);
-        //yesterday.setVisible(false);
+        needEvent.setVisible(false);
         email.setVisible(false);
         send.setVisible(false);
         emailLabel.setVisible(false);
@@ -147,88 +135,86 @@ public class GUI extends JFrame {
     }
 
     ActionListener eventListenerNext = (ActionEvent e) -> {
-            labelNum.setText("РЈРєР°Р¶РёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚Р°Р±Р»РµС‚РѕРє, РїСЂРёРЅРёРјР°РµРјС‹С… РїР°С†РёРµРЅС‚РѕРј РІ РґРµРЅСЊ:");
-            if (pred.isSelected()) type = "РїСЂРµРґРЅРёР·РѕР»РѕРЅ 5 РјРі";
-            if (metipred.isSelected()) type = "РјРµС‚РёРїСЂРµРґ 4 РјРі";
-            number.setVisible(true);
-            deb.setVisible(false);
-            name.setVisible(true);
-            labelName.setVisible(true);
-            labelNum.setVisible(true);
-            go.setVisible(true);
+        labelNum.setText("Укажите количество таблеток, принимаемых пациентом в день:");
+        if (pred.isSelected()) type = "преднизолон 5 мг";
+        if (metipred.isSelected()) type = "метипред 4 мг";
+        number.setVisible(true);
+        deb.setVisible(false);
+        name.setVisible(true);
+        labelName.setVisible(true);
+        labelNum.setVisible(true);
+        go.setVisible(true);
     };
 
     ActionListener eventListenerStop = (ActionEvent e) -> {
-            String text="Рљ СЃРѕР¶Р°Р»РµРЅРёСЋ, РґР°РЅРЅРѕРµ РїСЂРёР»РѕР¶РµРЅРёРµ РЅРµ РјРѕР¶РµС‚ СЃРѕР·РґР°С‚СЊ СЃС…РµРјСѓ РїСЂРёРµРјР° РґР°РЅРЅРѕРіРѕ РїСЂРµРїР°СЂР°С‚Р°.";
-            //String text1="\n";
-            //String text2="С‚РѕР»СЊРєРѕ РµСЃР»Рё РѕРЅ РїСЂРёРЅРёРјРµС‚ РџСЂРµРґРЅРёР·РѕР»РѕРЅ РІ РґРѕР·РёСЂРѕРІРєРµ 5 РјРі РёР»Рё РјРµС‚РёРїСЂРµРґ РІ РґРѕР·РёСЂРѕРІРєРµ 4 РјРі.";
-            deb.setText(text);
-            deb.setVisible(true);
-            number.setVisible(false);
-            name.setVisible(false);
-            labelName.setVisible(false);
-            go.setVisible(false);
-            labelNum.setVisible(false);
-            today.setVisible(false);
-            send.setVisible(false);
-            email.setVisible(false);
-            emailLabel.setVisible(false);
-            result.setVisible(false);
+        String text="К сожалению, данное приложение не может создать схему приема данного препарата.";
+        deb.setText(text);
+        deb.setVisible(true);
+        number.setVisible(false);
+        name.setVisible(false);
+        labelName.setVisible(false);
+        go.setVisible(false);
+        labelNum.setVisible(false);
+        needEvent.setVisible(false);
+        send.setVisible(false);
+        email.setVisible(false);
+        emailLabel.setVisible(false);
+        result.setVisible(false);
     };
 
     ActionListener eventListenerCount = (ActionEvent e) -> {
-            deb.setVisible(true);
-            labelNum.setVisible(true);
-            today.setVisible(true);
-            send.setVisible(true);
-            email.setVisible(true);
-            emailLabel.setVisible(true);
-            result.setVisible(true);
-            if (name.getText().length()==0 ) {
-                deb.setText("РЈРєР°Р¶РёС‚Рµ Р¤РРћ РїР°С†РёРµРЅС‚Р°.");
+        reminder = new Reminder();
+        deb.setVisible(true);
+        labelNum.setVisible(true);
+        needEvent.setVisible(false);
+        send.setVisible(false);
+        email.setVisible(false);
+        emailLabel.setVisible(false);
+        result.setVisible(false);
+        if (name.getText().length()==0 ) {
+            deb.setText("Укажите ФИО пациента.");
+            return;
+        }
+        if (number.getText().length()==0 ) {
+            deb.setText("Укажите количество таблеток.");
+            return;
+        }
+        try {
+            if ((Double.parseDouble(number.getText())<=0) || (Double.parseDouble(number.getText())>16)) {
+                deb.setText("Неверное количество.");
                 return;
             }
-            if (number.getText().length()==0 ) {
-                deb.setText("РЈРєР°Р¶РёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚Р°Р±Р»РµС‚РѕРє.");
-                return;
-            }
-            try {
-                if ((Double.parseDouble(number.getText())<=0) & (Double.parseDouble(number.getText())>=12)) {
-                    deb.setText("РќРµРІРµСЂРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ.");
-                    return;
-                }
-            }
-            catch (NumberFormatException ex){
-                deb.setText("РќРµРІРµСЂРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ.");
-                return;
-            }
-            try {
-                makePDF(number.getText(), name.getText(), type);
-            }
-            catch (DocumentException | IOException ex){
-            }
-            deb.setText("РќСѓР¶РЅС‹ Р»Рё РЅР°РїРѕРјРёРЅР°РЅРёСЏ РІ google-РєР°Р»РµРЅРґР°СЂРµ?");
-            today.setVisible(true);
-            //yesterday.setVisible(true);
-            email.setVisible(true);
-            emailLabel.setVisible(true);
-            send.setVisible(true);
+        }
+        catch (NumberFormatException ex){
+            deb.setText("Неверное количество.");
+            return;
+        }
+        try {
+            makePDF(number.getText(), name.getText(), type);
+        }
+        catch (DocumentException | IOException ex){
+        }
+        deb.setText("Нужны ли напоминания в календаре?");
+        needEvent.setVisible(true);
+        email.setVisible(true);
+        result.setVisible(true);
+        emailLabel.setVisible(true);
+        send.setVisible(true);
     };
 
     ActionListener eventListenerSend = (ActionEvent e) -> {
-            if (email.getText().length()==0 ) {
-                result.setText("РЈРєР°Р¶РёС‚Рµ email РїР°С†РёРµРЅС‚Р°.");
-                return;
-            }
-             if (!email.getText().matches("^([a-z0-9_-]+\\.)*[a-z0-9_-]+@[a-z0-9_-]+(\\.[a-z0-9_-]+)*\\.[a-z]{2,6}$") ) {
-                 result.setText("РЈРєР°Р¶РёС‚Рµ РІРµСЂРЅС‹Р№ email РїР°С†РёРµРЅС‚Р°.");
-                    return;
-             }
-            result.setText("Р“РѕС‚РѕРІРѕ!");
-             Mail mail = new Mail();
-             //EventPills event = new EventPills();
-             mail.send(email.getText(), name.getText());
-             //event.makeEvent();
+        if (email.getText().length()==0 ) {
+            result.setText("Укажите email пациента.");
+            return;
+        }
+        if (!email.getText().matches("^([a-z0-9_-]+\\.)*[a-z0-9_-]+@[a-z0-9_-]+(\\.[a-z0-9_-]+)*\\.[a-z]{2,6}$") ) {
+            result.setText("Укажите верный email пациента.");
+            return;
+        }
+
+        Mail mail = new Mail();
+        mail.send(email.getText(), name.getText());
+
     };
 
 
@@ -239,11 +225,16 @@ public class GUI extends JFrame {
         double all8 = (numberCount - 8 + 0.5) * 6;
         double all6 = (numberCount - 6 + 0.5) * 10;
         double all4 = (numberCount - 4 + 0.25) * 20;
-        double all2 = (numberCount - 2 + 0.25) * 28;
-        double all15 = (numberCount - 1.5 + 0.25) * 28*2;
+        double all2 = (numberCount - 2 + 0.25) * 12;
+        double all15 = (numberCount - 1.5 + 0.25) * 20;
+        double all1 = (numberCount - 1.0 + 0.25) * 28;
+        if (quater(numberCount)) {
+            all6 -= 2.5;
+            all8 -= 1.5;
+        }
         try {
             document.add(new Paragraph("\n"));
-            document.add(new Paragraph("Р”Р°С‚Р°                       РљРѕР»РёС‡РµСЃС‚РІРѕ С‚Р°Р±Р»РµС‚РѕРє РІ РґРµРЅСЊ", font));
+            document.add(new Paragraph("Дата                       Количество таблеток в день", font));
             document.add(new Paragraph("----------------------------------------------------------------------------------"));
         }
         catch (DocumentException ex){
@@ -251,13 +242,11 @@ public class GUI extends JFrame {
         boolean parity =false;
         double check;
         int weeks=1;
-        if (numberCount==1.5) weeks = 77;
-        if (numberCount==1.25) weeks = 63;
         if (numberCount==1.0) weeks = 49;
         if (numberCount==0.75) weeks = 35;
         if (numberCount==0.50) weeks = 21;
         if (numberCount==0.25) weeks = 7;
-        while (numberCount > 0 && numberCount <= 1.5) {
+        while (numberCount > 0 && numberCount <= 1.0) {
             if (!parity) {
                 numberCount-=0.25;
                 for (i = 1; i < 8; i++) {
@@ -268,7 +257,7 @@ public class GUI extends JFrame {
                         if (weeks-days==14) reminderEntry.setText(weeks2);
                         if (weeks-days==7) reminderEntry.setText(weeks1);
                         if (weeks-days==1) reminderEntry.setText(tomorrow);
-                        if (weeks-days==0) reminderEntry.setText("Р’ СЃР»СѓС‡Р°Рµ, РµСЃР»Рё РІС‹ РґРѕ СЃРёС… РїРѕСЂ РЅРµ РїРѕСЃРµС‚РёР»Рё РІСЂР°С‡Р°, СЃРґРµР»Р°Р№С‚Рµ СЌС‚Рѕ РєР°Рє РјРѕР¶РЅРѕ СЃРєРѕСЂРµРµ.");
+                        if (weeks-days==0) reminderEntry.setText("В случае, если вы до сих пор не посетили врача, сделайте это как можно скорее.");
                         if (weeks-days==-1) return;
                         days++;
                         reminder.getDays().add(reminderEntry);
@@ -281,7 +270,7 @@ public class GUI extends JFrame {
                         if (weeks-days==14) reminderEntry.setText(weeks2);
                         if (weeks-days==7) reminderEntry.setText(weeks1);
                         if (weeks-days==1) reminderEntry.setText(tomorrow);
-                        if (weeks-days==0) reminderEntry.setText("Р’ СЃР»СѓС‡Р°Рµ, РµСЃР»Рё РІС‹ РґРѕ СЃРёС… РїРѕСЂ РЅРµ РїРѕСЃРµС‚РёР»Рё РІСЂР°С‡Р°, СЃРґРµР»Р°Р№С‚Рµ СЌС‚Рѕ РєР°Рє РјРѕР¶РЅРѕ СЃРєРѕСЂРµРµ.");
+                        if (weeks-days==0) reminderEntry.setText("В случае, если вы до сих пор не посетили врача, сделайте это как можно скорее.");
                         if (weeks-days==-1) return;
                         days++;
                         reminder.getDays().add(reminderEntry);
@@ -297,7 +286,7 @@ public class GUI extends JFrame {
                     if (weeks-days==14) reminderEntry.setText(weeks2);
                     if (weeks-days==7) reminderEntry.setText(weeks1);
                     if (weeks-days==1) reminderEntry.setText(tomorrow);
-                    if (weeks-days==0) reminderEntry.setText("Р’ СЃР»СѓС‡Р°Рµ, РµСЃР»Рё РІС‹ РґРѕ СЃРёС… РїРѕСЂ РЅРµ РїРѕСЃРµС‚РёР»Рё РІСЂР°С‡Р°, СЃРґРµР»Р°Р№С‚Рµ СЌС‚Рѕ РєР°Рє РјРѕР¶РЅРѕ СЃРєРѕСЂРµРµ.");
+                    if (weeks-days==0) reminderEntry.setText("В случае, если вы до сих пор не посетили врача, сделайте это как можно скорее.");
                     if (weeks-days==-1) return;
                     days++;
                     reminder.getDays().add(reminderEntry);
@@ -306,29 +295,45 @@ public class GUI extends JFrame {
 
             }
         }
+
+        while (numberCount >= 1.0 && numberCount <= 1.5) {
+            for (i = 1; i < 8; i++) {
+                ReminderEntry reminderEntry = new ReminderEntry();
+                reminderEntry.setDate(now.plusDays(days));
+                reminderEntry.setCount(numberCount);
+                if ((all1 - days) == 14) reminderEntry.setText(weeks2);
+                if ((all1 - days) == 7)  reminderEntry.setText(weeks1);
+                if ((all1 - days) == 1)  reminderEntry.setText(tomorrow);
+                if ((all1 - days) == 0)  reminderEntry.setText(todayVisit+ " " + numberCount + " таблеток.");
+                reminder.getDays().add(reminderEntry);
+                days++;
+            }
+            numberCount -= 0.25;
+        }
+
         while (numberCount >= 1.5 && numberCount <= 2) {
-            for (i = 1; i < 15; i++) {
+            for (i = 1; i < 6; i++) {
                 ReminderEntry reminderEntry = new ReminderEntry();
                 reminderEntry.setDate(now.plusDays(days));
                 reminderEntry.setCount(numberCount);
                 if ((all15 - days) == 14) reminderEntry.setText(weeks2);
                 if ((all15 - days) == 7)  reminderEntry.setText(weeks1);
                 if ((all15 - days) == 1)  reminderEntry.setText(tomorrow);
-                if ((all15 - days) == 0)  reminderEntry.setText(todayVisit+ " " + numberCount + " С‚Р°Р±Р»РµС‚РѕРє.");
+                if ((all15 - days) == 0)  reminderEntry.setText(todayVisit+ " " + numberCount + " таблеток.");
                 reminder.getDays().add(reminderEntry);
                 days++;
             }
             numberCount -= 0.25;
         }
         while (numberCount >= 2 && numberCount <= 4) {
-            for (i = 1; i < 8; i++) {
+            for (i = 1; i < 4; i++) {
                 ReminderEntry reminderEntry = new ReminderEntry();
                 reminderEntry.setDate(now.plusDays(days));
                 reminderEntry.setCount(numberCount);
                 if ((all2 - days) == 14)reminderEntry.setText(weeks2);
                 if ((all2 - days) == 7) reminderEntry.setText(weeks1);
                 if ((all2 - days) == 1) reminderEntry.setText(tomorrow);
-                if ((all2 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " С‚Р°Р±Р»РµС‚РѕРє.");
+                if ((all2 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " таблеток.");
                 days++;
                 reminder.getDays().add(reminderEntry);
             }
@@ -342,7 +347,7 @@ public class GUI extends JFrame {
                 if ((all4 - days) == 14)reminderEntry.setText(weeks2);
                 if ((all4 - days) == 7) reminderEntry.setText(weeks1);
                 if ((all4 - days) == 1) reminderEntry.setText(tomorrow);
-                if ((all4 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " С‚Р°Р±Р»РµС‚РѕРє.");
+                if ((all4 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " таблеток.");
                 days++;
                 reminder.getDays().add(reminderEntry);
             }
@@ -356,21 +361,22 @@ public class GUI extends JFrame {
                 if ((all6 - days) == 14)reminderEntry.setText(weeks2);
                 if ((all6 - days) == 7) reminderEntry.setText(weeks1);
                 if ((all6 - days) == 1) reminderEntry.setText(tomorrow);
-                if ((all6 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " С‚Р°Р±Р»РµС‚РѕРє.");
+                if ((all6 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " таблеток.");
                 days++;
                 reminder.getDays().add(reminderEntry);
             }
             numberCount -= 0.5;
         }
         while (numberCount >= 8) {
+
             for (i = 1; i < 4; i++) {
-                    ReminderEntry reminderEntry = new ReminderEntry();
-                    reminderEntry.setDate(now.plusDays(days));
-                    reminderEntry.setCount(numberCount);
-                    if ((all8 - days) == 14)reminderEntry.setText(weeks2);
-                    if ((all8 - days) == 7) reminderEntry.setText(weeks1);
-                    if ((all8 - days) == 1) reminderEntry.setText(tomorrow);
-                    if ((all8 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " С‚Р°Р±Р»РµС‚РѕРє.");
+                ReminderEntry reminderEntry = new ReminderEntry();
+                reminderEntry.setDate(now.plusDays(days));
+                reminderEntry.setCount(numberCount);
+                if ((all8 - days) == 14)reminderEntry.setText(weeks2);
+                if ((all8 - days) == 7) reminderEntry.setText(weeks1);
+                if ((all8 - days) == 1) reminderEntry.setText(tomorrow);
+                if ((all8 - days) == 0) reminderEntry.setText(todayVisit+ " " + numberCount + " таблеток.");
                 days++;
                 reminder.getDays().add(reminderEntry);
             }
@@ -378,12 +384,18 @@ public class GUI extends JFrame {
         }
     }
 
-    public void addImage(double numberCount) throws DocumentException, IOException {
+    public boolean quater(double num){
+
+        double dif = num - Math.floor(num);
+        return (dif > 0.74 && dif < 0.76) || (dif > 0.24 && dif < 0.26);
+    }
+
+    public void addImage(Document document, double numberCount) throws DocumentException, IOException {
         document.add(new Paragraph("\n"));
-        String imageFull = "C:\\Users\\РўР°РЅСЏ\\Documents\\res\\full.JPG";
-        String imageHalf = "C:\\Users\\РўР°РЅСЏ\\Documents\\res\\half.JPG";
-        String imageOne = "C:\\Users\\РўР°РЅСЏ\\Documents\\res\\1.JPG";
-        String imageThree = "C:\\Users\\РўР°РЅСЏ\\Documents\\res\\31.JPG";
+        String imageFull = "pic\\full.JPG";
+        String imageHalf = "pic\\half.JPG";
+        String imageOne = "pic\\1.JPG";
+        String imageThree = "pic\\31.JPG";
         Image full = Image.getInstance(imageFull);
         Image half = Image.getInstance(imageHalf);
         Image one = Image.getInstance(imageOne);
@@ -401,163 +413,157 @@ public class GUI extends JFrame {
         if (dif>0.49 & dif <0.74) document.add(new Chunk(half, 0, 0, true));
         if (dif>0.24 & dif <0.49) document.add(new Chunk(one, 0, 0, true));
         document.add(new Paragraph("----------------------------------------------------------------------------------"));
-
-
     }
 
 
-
-
-
     public void makePDF(String number, String name, String type) throws DocumentException, IOException {
-        String filename = "C:\\Users\\РўР°РЅСЏ\\Documents\\dip\\"+ name + " " + now.format(formatter) +".pdf";
+        LocalTime time  = LocalTime.now();
+        Document document = new Document();
+        filename = "res\\"+ name + " "  + time.format(formatterTime) + " " + now.format(formatter) +".pdf";
         PdfWriter.getInstance(document, new FileOutputStream(filename));
         PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(filename));
         MyFooter event = new MyFooter();
         writer.setPageEvent(event);
+        MyHeader header = new MyHeader();
+        writer.setPageEvent(header);
         document.open();
-        document.add(new Paragraph("Р¤РРћ РїР°С†РёРµРЅС‚Р°:    "+ name + "\n" + "РќР°С‡Р°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚Р°Р±Р»РµС‚РѕРє: " + number, font));
-        document.add(new Paragraph("РџСЂРµРїР°СЂР°С‚: "+ type , font));
+        document.add(new Paragraph("ФИО пациента:    "+ name + "\n" + "Начальное количество таблеток (таб.): " + number, font));
+        document.add(new Paragraph("Препарат: "+ type , font));
         calc(number, document, name);
         for (ReminderEntry reminderEntry : reminder.getDays()) {
-            document.add(new Paragraph(reminderEntry.getDate().format(formatter) + "             " + reminderEntry.getCount(), font));
+            document.add(new Paragraph(reminderEntry.getDate().format(formatter) + "             " + reminderEntry.getCount() + "    таб.", font));
             document.add(new Paragraph(reminderEntry.getText(), font));
-            addImage(reminderEntry.getCount());
+            addImage(document, reminderEntry.getCount());
         }
-
         document.close();
 
     }
 
-     class Mail {
+    class Mail {
 
-         public String makeEvent(){
-             Calendar calendar = new Calendar();
-             calendar.getProperties().add(new ProdId("-//Ben Fortuna//iCal4j 1.0//EN"));
-             calendar.getProperties().add(net.fortuna.ical4j.model.property.Version.VERSION_2_0);
-             calendar.getProperties().add(CalScale.GREGORIAN);
+        public String makeEvent(){
+            Calendar calendar = new Calendar();
+            calendar.getProperties().add(new ProdId("-//Ben Fortuna//iCal4j 1.0//EN"));
+            calendar.getProperties().add(net.fortuna.ical4j.model.property.Version.VERSION_2_0);
+            calendar.getProperties().add(CalScale.GREGORIAN);
 
-            // initialise as an all-day event..
-             reminder.getDays().forEach(rem -> {
-                 VEvent event = null;
-                 try {
-                     event = new VEvent(new Date(rem.getDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
-                                            "dd-MM-yyyy"),
-                             "РџСЂРёРЅСЏС‚СЊ " + type + " РІ РєРѕР»РёС‡РµСЃС‚РІРµ: " + rem.getCount() + " С‚Р°Р±. " + rem.getText());
-                 } catch (java.text.ParseException e) {
-                     e.printStackTrace();
-                 }
+            reminder.getDays().forEach(rem -> {
+                if (rem.getCount()!=0){
+                    VEvent event = null;
+                    VEvent eventVisit = null;
+                    try {
+                        event = new VEvent(new Date(rem.getDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                                "dd-MM-yyyy"),
+                                "Принять " + type + " в количестве: " + rem.getCount() + " таб. ");
+                        if (rem.getText()!="")
+                            eventVisit = new VEvent(new Date(rem.getDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                                    "dd-MM-yyyy"),
+                                    rem.getText());
+                    } catch (java.text.ParseException e) {
+                        e.printStackTrace();
+                    }
 
-                 // Generate a UID for the event..
-                 String uidString = new UID().toString();
-                 UidGenerator ug = () -> new net.fortuna.ical4j.model.property.Uid(uidString);
-                 event.getProperties().add(ug.generateUid());
+                    String uidString = new UID().toString();
+                    UidGenerator ug = () -> new net.fortuna.ical4j.model.property.Uid(uidString);
+                    event.getProperties().add(ug.generateUid());
+                    if (eventVisit != null) {
+                        eventVisit.getProperties().add(ug.generateUid());
+                    }
 
-                 calendar.getComponents().add(event);
-             });
+                    calendar.getComponents().add(event);
+                    if (eventVisit != null) {
+                        calendar.getComponents().add(eventVisit);
+                    }
+                }
+            });
 
-             String calendarFileName = "calendar" + ".ics";
-             try {
-                 FileOutputStream fout = new FileOutputStream(calendarFileName);
-                 CalendarOutputter outputter = new CalendarOutputter();
-                 outputter.output(calendar, fout);
-             } catch (FileNotFoundException e) {
-                 e.printStackTrace();
-             } catch (IOException e) {
-                 e.printStackTrace();
-             }
-             return calendarFileName;
-         }
+            String calendarFileName = "calendar" + ".ics";
+            try {
+                FileOutputStream fout = new FileOutputStream(calendarFileName);
+                CalendarOutputter outputter = new CalendarOutputter();
+                outputter.output(calendar, fout);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return calendarFileName;
+        }
 
-         public void send(String address, String name) {
-             String filename = "C:\\Users\\РўР°РЅСЏ\\Documents\\dip\\"+ name + " " + now.format(formatter) +".pdf";
+        public void send(String address, String name) {
+            final String username = "yourDoctor19@gmail.com";
+            final String password = "vov8022018";
 
-             final String username = "tanyaaf03.11@gmail.com";
-             final String password = "bulkbulk78";
+            Properties props = new Properties();
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.host", "smtp.gmail.com");
+            props.put("mail.smtp.port", "587");
 
-             Properties props = new Properties();
-             props.put("mail.smtp.starttls.enable", "true");
-             props.put("mail.smtp.auth", "true");
-             props.put("mail.smtp.host", "smtp.gmail.com");
-             props.put("mail.smtp.port", "587");
+            Session session = Session.getInstance(props,
+                    new javax.mail.Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(username, password);
+                        }
+                    });
 
-             Session session = Session.getInstance(props,
-                     new javax.mail.Authenticator() {
-                         protected PasswordAuthentication getPasswordAuthentication() {
-                             return new PasswordAuthentication(username, password);
-                         }
-                     });
+            try {
+                Message message = new MimeMessage(session);
+                message.setFrom(new InternetAddress("yourDoctor19@gmail.com"));
+                message.setRecipients(Message.RecipientType.TO,
+                        InternetAddress.parse(address));
+                message.setSubject("Схема лечения");
+                Multipart multipart = new MimeMultipart();
+                MimeBodyPart textBodyPart = new MimeBodyPart();
+                textBodyPart.setText("Добрый день!"
+                        + "\n\n В приложениях в данному сообщению вы можете найти Вашу схему лечения.");
+                MimeBodyPart attachmentBodyPart= new MimeBodyPart();
+                DataSource source = new FileDataSource(filename);
+                attachmentBodyPart.setDataHandler(new DataHandler(source));
+                attachmentBodyPart.setFileName(filename);
+                if (needEvent.isSelected()) {
+                    String calendarFileName = makeEvent();
+                    MimeBodyPart calendarBodyPart = new MimeBodyPart();
+                    DataSource calendarSource = new FileDataSource(calendarFileName);
+                    calendarBodyPart.setDataHandler(new DataHandler(calendarSource));
+                    calendarBodyPart.setFileName(calendarFileName);
+                    multipart.addBodyPart(calendarBodyPart);
+                }
+                multipart.addBodyPart(textBodyPart);
+                multipart.addBodyPart(attachmentBodyPart);
+                message.setContent(multipart);
+                Transport.send(message);
+                result.setText("Сообщение отправлено!");
 
-             try {
-                 Message message = new MimeMessage(session);
-                 message.setFrom(new InternetAddress("tanyaaf03.11@gmail.com"));
-                 message.setRecipients(Message.RecipientType.TO,
-                         InternetAddress.parse(address));
-                 message.setSubject("РЎС…РµРјР° Р»РµС‡РµРЅРёСЏ");
-                 Multipart multipart = new MimeMultipart();
-                 MimeBodyPart textBodyPart = new MimeBodyPart();
-                 textBodyPart.setText("Р”РѕР±СЂС‹Р№ РґРµРЅСЊ!"
-                         + "\n\n Р’ РїСЂРёР»РѕР¶РµРЅРёСЏС… РІ РґР°РЅРЅРѕРјСѓ СЃРѕРѕР±С‰РµРЅРёСЋ РІС‹ РјРѕР¶РµС‚Рµ РЅР°Р№С‚Рё Р’Р°С€Сѓ СЃС…РµРјСѓ Р»РµС‡РµРЅРёСЏ!");
-                 MimeBodyPart attachmentBodyPart= new MimeBodyPart();
-                 DataSource source = new FileDataSource(filename);
-                 attachmentBodyPart.setDataHandler(new DataHandler(source));
-                 attachmentBodyPart.setFileName(filename);
-                 String calendarFileName = makeEvent();
-                 MimeBodyPart calendarBodyPart = new MimeBodyPart();
-                 DataSource calendarSource = new FileDataSource(calendarFileName);
-                 calendarBodyPart.setDataHandler(new DataHandler(calendarSource));
-                 calendarBodyPart.setFileName(calendarFileName);
-                 multipart.addBodyPart(textBodyPart);
-                 multipart.addBodyPart(attachmentBodyPart); //TODO: no internet
-                 multipart.addBodyPart(calendarBodyPart); //TODO: no internet
-                 message.setContent(multipart);
-                 Transport.send(message);
-                 System.out.println("Done");
-
-             } catch (MessagingException e) {
-                 throw new RuntimeException(e);
-             }
-         }
-
-     }
-
-        class MyFooter extends PdfPageEventHelper {
-            public void onEndPage(PdfWriter writer, Document document) {
-                PdfContentByte cb = writer.getDirectContent();
-                Phrase footer = new Phrase("                                                                                Р¤Р°РјРёР»РёСЏ РІСЂР°С‡Р°:________________/_______", font);
-                ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
-                        footer,
-                        (document.right() - document.left()) / 2 + document.leftMargin(),
-                        document.bottom() - 10, 0);
+            } catch (MessagingException e) {
+                result.setText("Проверьте подключение к интернету и повторите попытку");
             }
         }
 
-     /*class EventPills {
-        public void makeEvent() throws IOException, ServiceException {
-            URL postUrl = new URL("http://www.google.com/calendar/feeds/default/private/full");
-            EventEntry myEntry = new EventEntry();
+    }
 
-            myEntry.setTitle(new PlainTextConstruct("Tennis with Beth"));
-            myEntry.setContent(new PlainTextConstruct("Meet for a quick lesson."));
-
-            Person author = new Person("Jo March", null, "jo@gmail.com");
-            myEntry.getAuthors().add(author);
-
-            DateTime startTime = DateTime.parseDateTime("2006-04-17T15:00:00-08:00");
-            DateTime endTime = DateTime.parseDateTime("2006-04-17T17:00:00-08:00");
-            When eventTimes = new When();
-            eventTimes.(startTime);
-            eventTimes.setEndTime(endTime);
-            myEntry.addTime(eventTimes);
-
-            CalendarService myService =
-                    new CalendarService("exampleCo-exampleApp-1");
-            myService.setUserCredentials("jo@gmail.com", "mypassword");
-
-
-            EventEntry insertedEntry = myService.insert(postUrl, myEntry);
+    class MyFooter extends PdfPageEventHelper {
+        public void onEndPage(PdfWriter writer, Document document) {
+            PdfContentByte cb = writer.getDirectContent();
+            Phrase footer = new Phrase( "Фамилия врача:________________/_______", font);
+            ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT,
+                    footer,
+                    (document.right()-20)  + document.leftMargin(),
+                    document.bottom() - 10, 0);
         }
-     }*/
+    }
+
+    class MyHeader extends PdfPageEventHelper {
+        public void onEndPage(PdfWriter writer, Document document) {
+            PdfContentByte cb = writer.getDirectContent();
+            Phrase header = new Phrase("" + writer.getPageNumber(), font);
+            ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT,
+                    header,
+                    document.right() - 30 + document.leftMargin(),
+                    document.top() - 10, 0);
+        }
+    }
+
 
     public static void main(String[] args) throws IOException, DocumentException {
         GUI app = new GUI();
